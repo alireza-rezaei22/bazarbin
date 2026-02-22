@@ -1,41 +1,33 @@
-import Navbar from '@/Components/modules/navbar/Navbar'
-import SideBar from '@/Components/modules/sidebar/SideBar'
-import BottomNav from '@/Components/template/bottomNav/BottomNav'
+import SideBar from '@/Components/sidebar/SideBar'
 import { LogIn } from 'lucide-react'
 import React from 'react'
-import { auth } from "@/auth";
-import { redirect } from "next/navigation";
-// import { getServerSession } from 'next-auth'
-import { authOptions } from '../api/[...nextauth]/route'
 import { cookies } from 'next/headers'
+import Link from 'next/link'
 
 
 async function Layout({ children }) {
-    // const session = await getServerSession(authOptions)
-    // console.log(session);
-    const token = await cookies().get('token')?.value
-    console.log(token);
+    const userCookes = await cookies()
+    const usertoken = userCookes.get('token')?.value
     return (
-        <>
-            <Navbar />
-            <div className='flex flex-row'>
-                <SideBar />
-                <main className='flex flex-col w-full m-5 md:m-8'>
-                    {token ?
+        <div className='flex flex-row mt-2'>
+            <SideBar />
+            <main className='hide-scrollbar flex flex-col w-full h-[90vh] bg-gray-600 rounded-xl md:mx-5 p-5 md:p-10 overflow-y-scroll'>
+                {usertoken ?
                     <>
-                        { children }
-                    </>:
-                        <div className='m-12 p-12 border flex flex-col justify-center items-center rounded-md'>
-                            <>
-                                <LogIn className='size-14' />
-                                لاگین کنید
-                            </>
-                        </div>
-                    }
-                </main>
-            </div>
-            <BottomNav />
-        </>
+                        {children}
+                    </> :
+                    // <div className='m-12 p-12 border flex flex-col justify-center items-center rounded-md'>
+                    <Link
+                        href={'/login-register'}
+                        className='m-12 p-12 border flex flex-col justify-center items-center rounded-md'
+                    >
+                        <LogIn className='size-14' />
+                        <span>ابتدا<span className='text-blue-400'> لاگین</span> کنید</span>
+                    </Link>
+                    // </div>
+                }
+            </main>
+        </div>
     )
 }
 

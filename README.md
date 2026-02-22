@@ -14,6 +14,8 @@
 - lucide-react
 - mongoose
 - zustand
+- socket-io
+- react hot toast
 
 ---
 
@@ -26,10 +28,12 @@
     - npm install
 3. Start project:
     - npm run dev
+    - npm run dev-socket
+
 
 ---
 
 ## 📝 Important Notes
--  this version is not complete yet.
 -  Server runs on port 3000.
 -  this project use mongoDB as DataBase and local DB adress is default
+-  for having real time chat using web socket run npm run dev-socket

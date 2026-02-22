@@ -6,7 +6,7 @@ const connectToDB = async ()=>{
             return true
         }else{
             await mongoose.connect('mongodb://127.0.0.1:27017/bazarBin')
-            console.log('connection success HERE!!!!!');
+            console.log('connection success');
         }
     }catch(err){
         console.log('connection faild', err);

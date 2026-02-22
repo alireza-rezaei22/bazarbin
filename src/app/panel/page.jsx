@@ -1,55 +1,101 @@
 import React from 'react'
 
 import Link from 'next/link'
-import { UserRound } from 'lucide-react'
+import { DollarSign, UserRound } from 'lucide-react'
 import { ShoppingBasket } from 'lucide-react'
 import { Bookmark } from 'lucide-react';
 import { MessagesSquare } from 'lucide-react';
 import { LogOut } from 'lucide-react';
 import { PlusCircle } from 'lucide-react';
+import StatusCount from '@/Components/statusCount/StatusCount';
+import productModel from '@/model/product';
+import { cookies } from 'next/headers';
+import { verify } from 'jsonwebtoken';
+import markModel from '@/model/mark';
+import chatModel from '@/model/chat';
+import ProductItem from '@/Components/productItem/ProductItem';
+import NullItemPanel from '@/Components/nullItemPanel/nullItemPanel';
+import ChatItem from '@/Components/chatItem/chatItem';
+import Meniu from '@/Components/meniu/meniu';
 
-function Panel() {
+export const dynamic = 'force-dynamic'
+
+async function Panel() {
+
+  const routes = [
+    { name: 'اطلاعات من', icon: UserRound, path: '/panel/userInfo' },
+    { name: 'آگهی های من', icon: ShoppingBasket, path: '/panel/myProducts' },
+    { name: 'معاملات من', icon: DollarSign, path: '#' },
+    { name: 'اگهی جدید', icon: PlusCircle, path: '/panel/newProduct' },
+    { name: 'نشان شده ها', icon: Bookmark, path: '/panel/markedProducts' },
+    { name: 'گفتوگو های من', icon: MessagesSquare, path: '/panel/chats' },
+    { name: 'خروج', icon: LogOut, path: '/' },
+  ]
+  const userToken = (await cookies()).get('token')
+  const token = userToken?.value
+
+  const userInfo = verify(token, process.env.ACCESSTOKEN_SECRETKEY)
+  const [userProductsCount = 0, lastProduct] = await Promise.all([
+    productModel.countDocuments({ ownerId: userInfo.id }),
+    productModel.findOne({ ownerId: userInfo.id }).sort({ date: -1 }).select('-__v -location -ownerId').lean()
+  ])
+  const [userMarksCount = 0, lastMarkRes] = await Promise.all([
+    markModel.countDocuments({ userId: userInfo.id }),
+    markModel.findOne({ userId: userInfo.id }).sort({ date: -1 }).select('productId -_id').populate({ path: 'productId', select: '-__v -location -ownerId' }).lean()
+  ])
+  const lastMark = lastMarkRes?.productId
+  const [userChatsCount = 0, lastChatItem] = await Promise.all([
+    chatModel.countDocuments({ participants: userInfo.id }),
+    chatModel
+      .findOne({ participants: userInfo.id })
+      .sort({ 'messages.createdAt': -1 }).populate({ path: 'productId', select: 'title image' }).populate({ path: 'participants', select: 'name' })
+      .lean()
+
+  ])
+  const lastMsgText = lastChatItem?.messages[lastChatItem.messages.length - 1].text || []
+  const otherParticipantName = lastChatItem?.participants.find(part => part.name !== userInfo.name).name || null
+  const chatInfo = {
+    _id: lastChatItem?._id,
+    chatId: lastChatItem?.chatId,
+    productId: lastChatItem?.productId,
+    participants: lastChatItem?.participants,
+    otherParticipantName,
+    lastMsgText,
+  }
+
   return (
     <>
-      {/* <ul className='md:hidden flex flex-col gap-2 p-2'>
-        <Link href='/panel/userInfo' className='flex flex-nowrap gap-2 items-center border-b border-zinc-500 px-2 py-4 rounded-md hover:bg-zinc-50'>
-          <UserRound />
-          اطلاعات کاربری
-        </Link>
-        <Link href='/' className='flex flex-nowrap gap-2 items-center border-b border-zinc-500 px-2 py-4 rounded-md hover:bg-zinc-50'>
-          <ShoppingBasket />
-          لیست معاملات
-        </Link>
-        <Link href='/panel/newProduct' className='flex flex-nowrap gap-2 items-center border-b border-zinc-500 px-2 py-4 rounded-md hover:bg-zinc-50'>
-          <PlusCircle />
-          انتشار اگهی
-        </Link>
-        <Link href='/' className='flex flex-nowrap gap-2 items-center border-b border-zinc-500 px-2 py-4 rounded-md hover:bg-zinc-50'>
-          <Bookmark />
-          نشان شده ها
-        </Link>
-        <Link href='/' className='flex flex-nowrap gap-2 items-center border-b border-zinc-500 px-2 py-4 rounded-md hover:bg-zinc-50'>
-          <MessagesSquare />
-          گفتوگو ها
-        </Link>
-        <Link href='/' className='flex flex-nowrap gap-2 items-center border-b border-zinc-500 px-2 py-4 rounded-md hover:bg-zinc-50'>
-          <LogOut />
-          خروج
-        </Link>
-      </ul> */}
-      <div className='w-full p-10 bg-red-50 hidden md:flex flex-wrap justify-center items-start gap-10'>
-        <div className='bg-green-200 w-60 h-60 rounded-md p-4 flex justify-center items-center'>
-          box
-        </div>
-        <div className='bg-green-200 w-60 h-60 rounded-md p-4 flex justify-center items-center'>
-          box
-        </div>
-        <div className='bg-green-200 w-60 h-60 rounded-md p-4 flex justify-center items-center'>
-          box
-        </div>
-        <div className='bg-green-200 w-60 h-60 rounded-md p-4 flex justify-center items-center'>
-          box
-        </div>
+    <Meniu/>
+      <div className='w-full hidden md:flex flex-wrap'>
+        <StatusCount title={'تعداد آگهی ها'} count={userProductsCount} describe={''} href={'panel/myProducts'}>
+          {
+            lastProduct ?
+              <ProductItem product={lastProduct} /> :
+              <NullItemPanel text={'تاکنون آگهی ثبت نکرده اید'} />
+          }
+        </StatusCount>
+        <StatusCount title={'تعداد معاملات'} count={0} describe={''} href={'panel/'}>
+          {
+            false ?
+              <ProductItem product={lastProduct} /> :
+              <NullItemPanel text={'تاکنون معامله ای نداشته اید'} />
+          }
+        </StatusCount>
+        <StatusCount title={'تعداد نشان شده ها'} count={userMarksCount} describe={''} href={'panel/markedProducts'}>
+          {
+            lastMark ?
+              <ProductItem product={lastMark} /> :
+              <NullItemPanel text={'تاکنون آگهی را نشان نکرده اید'} />
+          }
+        </StatusCount>
+        <StatusCount title={'تعداد گفتوگو شده ها'} count={userChatsCount} describe={''} href={'panel/chats'}>
+          {
+            lastChatItem ?
+              <ChatItem chat={chatInfo} />
+              :
+              <NullItemPanel text={'تاکنون گفتوگویی نداشته اید'} />
+          }
+        </StatusCount>
       </div>
     </>
   )

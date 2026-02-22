@@ -1,40 +1,49 @@
 import mongoose from "mongoose";
 
 const schema = mongoose.Schema({
-    image:{
-        type: Buffer,
-        required : false,
-    },
-    title:{
+    image: {
         type: String,
-        required : true,
+        required: false,
+    },
+    title: {
+        type: String,
+        required: true,
         minLength: 2,
-        maxLength: 20,
+        maxLength: 50,
     },
-    description:{
+    description: {
         type: String,
-        required : false,
+        required: false,
     },
-    city:{
+    city: {
         type: String,
-        required : true,
+        required: true,
     },
-    price:{
-        type: Number,
-        required : true,
-    },
-    condition:{
+    price: {
         type: String,
-        required : true,
+        required: false,
     },
-    location:{
+    condition: {
+        type: String,
+        required: true,
+    },
+    category: {
+        type: String,
+        required: true,
+    },
+    location: {
         type: Array,
         required: false
     },
     date: {
         type: Date,
         default: Date.now(),
-      },
+    },
+    ownerId:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'user',
+        required: true,
+    }
 })
 const productModel = mongoose.models?.product || mongoose.model('product', schema)
 export default productModel

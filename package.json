@@ -2,10 +2,13 @@
   "name": "bazarbin",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "next dev --turbopack",
+    "dev-socket": "node server.js",
     "build": "next build --turbopack",
     "start": "next start",
+    "start-socket": "NODE_ENV=production node server.js",
     "lint": "eslint"
   },
   "dependencies": {
@@ -20,7 +23,10 @@
     "next": "15.5.2",
     "react": "19.1.0",
     "react-dom": "19.1.0",
+    "react-hot-toast": "^2.6.0",
     "react-leaflet": "^5.0.0",
+    "socket.io": "^4.8.3",
+    "socket.io-client": "^4.8.3",
     "zod": "^4.1.5",
     "zustand": "^5.0.8"
   },
